@@ -4,6 +4,6 @@ import java.util.ArrayList;
 
 public interface PlacesListInterface extends Remote {
   void addPlace(Place p) throws RemoteException;
-
   ArrayList<Place> allPlaces() throws RemoteException;
+  Place getPlace(String objectID) throws RemoteException;
 }
