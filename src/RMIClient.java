@@ -16,7 +16,7 @@ public class RMIClient {
       System.out.println("Invocar addPlace() ...");
       l1.addPlace(p);
 
-      System.out.println("Obter o endereço do servidor no Registry() ...");
+      System.out.println("Obter o endereco do servidor no Registry() ...");
       ObjectRegistryInterface l2;
       PlacesListInterface l3;
       try {
@@ -31,7 +31,7 @@ public class RMIClient {
       }
 
     } catch (Exception e) {
-      System.out.println("Problemas de Comunicação\n" + e.getMessage());
+      System.out.println("Problemas de Comunicao\n" + e.getMessage());
     }
   }
 }
