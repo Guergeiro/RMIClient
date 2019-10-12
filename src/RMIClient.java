@@ -2,36 +2,52 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 
 public class RMIClient {
   public static void main(String[] args) {
-    PlacesListInterface l1 = null;
+    Thread t = (new Thread() {
+      public void run() {
+        RMIRegistry.main(new String[0]);
+        RMIReplicaManager.main(new String[0]);
+        RMIServer.main(new String[] {"2025"});
+        RMIServer.main(new String[] {"2026"});
+        RMIServer.main(new String[] {"2027"});
+      }
+    });
+    t.start();
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
+    } // garante que todos os serviços estão disponíveis antes de executar o
+      // código do cliente
+
+    PlacesListManagerInterface p1 = null;
+    ObjectRegistryInterface p2 = null;
+    PlacesListManagerInterface p3 = null;
+    PlacesListInterface p4 = null;
 
     try {
-      System.out.println("Localizar servidor de Objetos...");
-      l1 = (PlacesListInterface) Naming.lookup("rmi://localhost:2022/placelist");
-
-      Place p = new Place("3510", "Viseu");
-      System.out.println("Invocar addPlace() ...");
-      l1.addPlace(p);
-
-      System.out.println("Obter o endereco do servidor no Registry() ...");
-      ObjectRegistryInterface l2;
-      PlacesListInterface l3;
-      try {
-        l2 = (ObjectRegistryInterface) Naming.lookup("rmi://localhost:2023/registry");
-        String addr = l2.resolve("3510");
-
-        System.out.println("Invocar getPlace() no servidor de objetos...");
-        l3 = (PlacesListInterface) Naming.lookup(addr);
-        System.out.println(l3.getPlace("3510").getLocality());
-      } catch (MalformedURLException | NotBoundException e) {
-        System.out.println(e.getCause());
-      }
-
-    } catch (Exception e) {
-      System.out.println("Problemas de Comunicao\n" + e.getMessage());
+      System.out.println("Adicionar place no ReplicaManager");
+      p1 = (PlacesListManagerInterface) Naming.lookup("rmi://localhost:2024/replicamanager");
+      p1.addPlace(new Place("3500", "Viseu"));
+      
+      System.out.println("Invocar um replica manager do object registry");
+      p2 = (ObjectRegistryInterface) Naming.lookup("rmi://localhost:2023/registry");
+      String url = p2.resolve("3500");
+      
+      System.out.println("Invocar uma replica do replica manager");
+      p3 = (PlacesListManagerInterface) Naming.lookup(url);
+      String url2 = p3.getPlaceListAddress("3500");
+      
+      System.out.println("Invocar o object place da replica");
+      p4 = (PlacesListInterface) Naming.lookup(url2);
+      System.out.println(p4.getPlace("3500").getLocality());
+    } catch (MalformedURLException | RemoteException | NotBoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
+    
   }
 }

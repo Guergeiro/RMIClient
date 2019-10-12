@@ -5,14 +5,32 @@
               directory with the processing instruction <?eclipse.ant.import?>
               as the first entry and export the buildfile again. --><project basedir="." default="build" name="RMIClient">
     <property environment="env"/>
+    <property name="RMIRegistry.location" value="../RMIRegistry"/>
+    <property name="RMIReplicaManager.location" value="../RMIReplicaManager"/>
+    <property name="RMIServer.location" value="../RMIServer"/>
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="12"/>
     <property name="source" value="12"/>
+    <path id="RMIRegistry.classpath">
+        <pathelement location="${RMIRegistry.location}/bin"/>
+    </path>
+    <path id="RMIReplicaManager.classpath">
+        <pathelement location="${RMIReplicaManager.location}/bin"/>
+    </path>
+    <path id="RMIServer.classpath">
+        <pathelement location="${RMIServer.location}/bin"/>
+    </path>
     <path id="RMIClient.classpath">
         <pathelement location="bin"/>
+        <path refid="RMIRegistry.classpath"/>
+        <path refid="RMIReplicaManager.classpath"/>
+        <path refid="RMIServer.classpath"/>
     </path>
     <path id="run.RMIClient.classpath">
         <path refid="RMIClient.classpath"/>
+        <path refid="RMIRegistry.classpath"/>
+        <path refid="RMIReplicaManager.classpath"/>
+        <path refid="RMIServer.classpath"/>
     </path>
     <target name="init">
         <mkdir dir="bin"/>
@@ -26,9 +44,29 @@
     <target name="clean">
         <delete dir="bin"/>
     </target>
-    <target depends="clean" name="cleanall"/>
+    <target depends="clean" name="cleanall">
+        <ant antfile="build.xml" dir="${RMIRegistry.location}" inheritAll="false" target="clean"/>
+        <ant antfile="build.xml" dir="${RMIReplicaManager.location}" inheritAll="false" target="clean"/>
+        <ant antfile="build.xml" dir="${RMIServer.location}" inheritAll="false" target="clean"/>
+    </target>
     <target depends="build-subprojects,build-project" name="build"/>
-    <target name="build-subprojects"/>
+    <target name="build-subprojects">
+        <ant antfile="build.xml" dir="${RMIRegistry.location}" inheritAll="false" target="build-project">
+            <propertyset>
+                <propertyref name="build.compiler"/>
+            </propertyset>
+        </ant>
+        <ant antfile="build.xml" dir="${RMIReplicaManager.location}" inheritAll="false" target="build-project">
+            <propertyset>
+                <propertyref name="build.compiler"/>
+            </propertyset>
+        </ant>
+        <ant antfile="build.xml" dir="${RMIServer.location}" inheritAll="false" target="build-project">
+            <propertyset>
+                <propertyref name="build.compiler"/>
+            </propertyset>
+        </ant>
+    </target>
     <target depends="init" name="build-project">
         <echo message="${ant.project.name}: ${ant.file}"/>
         <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
