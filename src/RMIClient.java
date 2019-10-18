@@ -1,33 +1,62 @@
-import java.net.MalformedURLException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
 
 public class RMIClient {
   public static void main(String[] args) {
-    PlacesListManagerInterface p1 = null;
-    ObjectRegistryInterface p2 = null;
-    PlacesListManagerInterface p3 = null;
-    PlacesListInterface p4 = null;
+    PlacesListManagerInterface plm;
+    PlacesListInterface pli;
+    ObjectRegistryInterface ori;
+
 
     try {
-      System.out.println("Adicionar place no ReplicaManager");
-      p1 = (PlacesListManagerInterface) Naming.lookup("rmi://localhost:2024/replicamanager");
-      p1.addPlace(new Place("3500", "Viseu"));
+      System.out.println("Localizar ReplicaManager...");
+      plm = (PlacesListManagerInterface) Naming.lookup("rmi://localhost:2024/replicamanager");
 
-      System.out.println("Invocar um replica manager do object registry");
-      p2 = (ObjectRegistryInterface) Naming.lookup("rmi://localhost:2023/registry");
-      String url = p2.resolve("3500");
+      Place p1 = new Place("3510", "Viseu");
+      System.out.println("Invocar addPlace() no ReplicaManager para 3510...");
+      plm.addPlace(p1);
 
-      System.out.println("Invocar uma replica do replica manager");
-      p3 = (PlacesListManagerInterface) Naming.lookup(url);
-      String url2 = p3.getPlaceListAddress("3500");
+      Place p2 = new Place("1000", "Lisboa");
+      System.out.println("Invocar addPlace() no ReplicaManager para 1000...");
+      plm.addPlace(p2);
 
-      System.out.println("Invocar o object place da replica");
-      p4 = (PlacesListInterface) Naming.lookup(url2);
-      System.out.println(p4.getPlace("3500").getLocality());
-    } catch (MalformedURLException | RemoteException | NotBoundException e) {
-      // TODO Auto-generated catch block
+      Place p3 = new Place("4000", "Lisboa");
+      System.out.println("Invocar addPlace() no ReplicaManager para 4000...");
+      plm.addPlace(p3);
+
+      System.out
+          .println("Obter o endereço do ReplicaManager no Registry() para o ObjectID 1000 ...");
+      ori = (ObjectRegistryInterface) Naming.lookup("rmi://localhost:2023/registry");
+      String addrRM = ori.resolve("1000");
+
+      System.out.println(
+          "Pedir ao ReplicaManager para devolver um PlaceManager para o ObjectID 1000 ...");
+      plm = (PlacesListManagerInterface) Naming.lookup(addrRM);
+      boolean pl1done = false;
+      boolean pl2done = false;
+      boolean pl3done = false;
+      String plAddress = null;
+      for (int i = 0; i < 10; i++) {
+        plAddress = plm.getPlaceListAddress("1000");
+        System.out.println("\tDevolveu " + plAddress);
+        if (plAddress.equals("rmi://localhost:2028/placelist"))
+          pl1done = true;
+        else if (plAddress.equals("rmi://localhost:2029/placelist"))
+          pl2done = true;
+        else if (plAddress.equals("rmi://localhost:2030/placelist"))
+          pl3done = true;
+      }
+
+      if (!(pl1done == pl2done == pl3done == true))
+        System.out.println("Não está a devolver um PlaceManager aleatório...");
+
+      System.out.println("Invocar getPlace() no PlaceManager");
+      pli = (PlacesListInterface) Naming.lookup(plAddress);
+      String locality = pli.getPlace("1000").getLocality();
+
+      System.out.println("\tDevolveu " + locality);
+
+
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
